@@ -5,14 +5,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { TOOLS } from "@/data/tools";
 import { cn } from "@/utils/cn";
+import PwaStatus from "./PwaStatus";
 import Sidebar from "./Sidebar";
 import ThemeToggle from "./ThemeToggle";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
-  const current =
-    TOOLS.find((t) => (t.href === "/" ? pathname === "/" : pathname.startsWith(t.href))) ?? TOOLS[0];
+  const current = TOOLS.find((t) => (t.href === "/" ? pathname === "/" : pathname.startsWith(t.href))) ?? {
+    title: "EEE Smart Lab",
+    description: "Circuit Companion",
+  };
 
   // Close the drawer on Escape and lock body scroll while it is open.
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-950/80">
+        <header className="sticky top-0 z-20 flex h-16 pt-[env(safe-area-inset-top)] box-content items-center gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-950/80">
           <button
             type="button"
             className="btn btn-ghost -ml-2 p-2 lg:hidden"
@@ -70,6 +73,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <p className="truncate text-sm font-semibold">{current.title}</p>
             <p className="hidden truncate text-xs text-slate-500 sm:block dark:text-slate-400">{current.description}</p>
           </div>
+          <PwaStatus />
           <ThemeToggle />
         </header>
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:py-8">{children}</main>

@@ -17,6 +17,21 @@ Built with **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS v4**, **l
 | IC & MCU Pinouts | `/tools/pinouts` | NE555, LM741, Arduino Uno (ATmega328P), ESP32 DevKit V1 — diagrams, pin table, live search and function filters (PWM, ADC, I2C, GND, VCC …) |
 | Lab Data Logger & V-I Plotter | `/tools/lab-plotter` | Editable V-I table, interactive V-I curve, dynamic resistance ΔV/ΔI (per segment and between any two points), linear fit, CSV export/import, auto-save |
 
+### Progressive Web App
+
+The app is an installable, offline-first PWA built with [Serwist](https://serwist.pages.dev/) (the maintained successor of `next-pwa`):
+
+- **Install** from the browser's install prompt / "Add to Home Screen", or the **Install** button in the header (Chromium browsers).
+- **Works fully offline**: every page, all JS/CSS chunks, icons and the manifest are precached when the service worker installs.
+  The full React Server Component payload of each route is also cached, so in-app navigation keeps working without a network.
+- **Offline fallback** (`/~offline`) for any page that isn't cached; an "Offline" badge appears in the header when the connection drops.
+- **Manifest** (`public/manifest.json`): name, short name `EEE Lab`, theme/background colours, standard + maskable icons, home-screen
+  shortcuts (Ohm's Law, Resistor Decoder, Pinouts, V-I Plotter) and install-dialog screenshots.
+- New deployments are picked up automatically (`skipWaiting` + `clientsClaim`; page revisions are keyed to the git commit).
+
+The service worker is only generated for production builds (`npm run build && npm start`); it is disabled in `npm run dev`.
+Set `NEXT_PUBLIC_SITE_URL` to your deployed origin so Open Graph image URLs are absolute.
+
 All numeric inputs accept SI prefixes: `4.7k`, `100n`, `2M2`, `10u`, `1e-3`.
 Light / dark / system theme is supported.
 
@@ -24,7 +39,7 @@ Light / dark / system theme is supported.
 
 ```
 src/
-├── app/                      # App Router pages (one route per tool) + root layout
+├── app/                      # App Router pages (one route per tool), root layout, sw.ts (service worker), ~offline
 ├── components/
 │   ├── calculators/          # OhmsLawCalculator, RCRLCCalculator, OpAmpCalculator
 │   ├── tools/                # ResistorDecoder, PinoutReference, LabPlotter

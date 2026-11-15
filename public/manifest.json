@@ -1,0 +1,66 @@
+{
+  "id": "/",
+  "name": "EEE Smart Lab & Circuit Companion",
+  "short_name": "EEE Lab",
+  "description": "Calculators, resistor & SMD decoder, IC/MCU pinouts and a V-I lab data plotter for Electrical & Electronic Engineering students and engineers. Works offline.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#0891b2",
+  "background_color": "#0f172a",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-144x144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-152x152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/maskable-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ohm's Law & Power",
+      "short_name": "Ohm's Law",
+      "description": "Solve V, I, R and P from any two values",
+      "url": "/calculators/ohms-law?source=shortcut",
+      "icons": [{ "src": "/icons/shortcut-ohm.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Resistor & SMD Decoder",
+      "short_name": "Resistor",
+      "description": "Decode colour bands and SMD resistor codes",
+      "url": "/tools/resistor-decoder?source=shortcut",
+      "icons": [{ "src": "/icons/shortcut-resistor.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "IC & MCU Pinouts",
+      "short_name": "Pinouts",
+      "description": "NE555, LM741, Arduino Uno and ESP32 pinouts",
+      "url": "/tools/pinouts?source=shortcut",
+      "icons": [{ "src": "/icons/shortcut-pinout.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "V-I Lab Plotter",
+      "short_name": "V-I Plotter",
+      "description": "Log readings and plot V-I characteristics",
+      "url": "/tools/lab-plotter?source=shortcut",
+      "icons": [{ "src": "/icons/shortcut-plotter.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/desktop-dashboard.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Dashboard with tools and formula cheat sheet" },
+    { "src": "/screenshots/desktop-plotter.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "V-I characteristic plotter" },
+    { "src": "/screenshots/mobile-ohms-law.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "Ohm's law solver on mobile" },
+    { "src": "/screenshots/mobile-pinouts.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "Pinout reference on mobile" }
+  ]
+}
