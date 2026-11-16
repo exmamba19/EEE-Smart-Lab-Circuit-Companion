@@ -2,6 +2,7 @@
 
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 import { cn } from "@/utils/cn";
 import { THEME_STORAGE_KEY as STORAGE_KEY } from "./themeScript";
 
@@ -11,6 +12,10 @@ function applyTheme(theme: Theme) {
   const dark =
     theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
+  // Native app: keep status/navigation bar icons readable against the current theme.
+  if (Capacitor.isNativePlatform()) {
+    void SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => undefined);
+  }
 }
 
 const OPTIONS: { value: Theme; icon: typeof Sun; label: string }[] = [

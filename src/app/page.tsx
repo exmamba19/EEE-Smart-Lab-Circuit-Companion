@@ -5,6 +5,16 @@ import { DEVICES } from "@/data/pinouts";
 import { FORMULAS } from "@/data/formulas";
 import { TOOLS } from "@/data/tools";
 
+/**
+ * Capacitor's Android WebView answers every extensionless path (e.g. `/tools/pinouts/` after a
+ * WebView reload) with the root `index.html`. When that happens for a known route, load that
+ * route's own exported file instead. Static web hosts never serve this page at another path,
+ * so the script is a no-op on the web.
+ */
+const ROUTE_FIX_SCRIPT = `(function(){var r=${JSON.stringify(
+  TOOLS.filter((t) => t.href !== "/").map((t) => t.href + "/"),
+)};var p=location.pathname;if(p.charAt(p.length-1)!=="/")p+="/";if(r.indexOf(p)!==-1)location.replace(p+"index.html"+location.search+location.hash);})();`;
+
 export default function DashboardPage() {
   const stats = [
     { label: "Tools", value: TOOLS.length - 1 },
@@ -15,6 +25,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <script dangerouslySetInnerHTML={{ __html: ROUTE_FIX_SCRIPT }} />
       <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 text-white shadow-sm sm:p-8 dark:border-slate-800">
         <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.12]" aria-hidden="true">
           <defs>
