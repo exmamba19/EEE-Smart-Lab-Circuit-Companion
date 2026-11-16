@@ -90,11 +90,18 @@ export const FORMULAS: Formula[] = [
   { id: "slip", name: "Induction Motor Slip", category: "Power & Machines", expression: "s = (N_s − N_r) / N_s", variables: "N_r rotor speed" },
   { id: "torque", name: "Mechanical Power & Torque", category: "Power & Machines", expression: "P = T · ω = 2π N T / 60", variables: "T torque (N·m), N speed (rpm)" },
   { id: "dc-emf", name: "DC Machine Back-EMF", category: "Power & Machines", expression: "E_b = V − I_a R_a", variables: "I_a armature current, R_a armature resistance" },
+  { id: "pf-correction", name: "Power-Factor Correction", category: "Power & Machines", expression: "Q_c = P · (tan φ₁ − tan φ₂),  C_Δ = Q_c / (3 ω V_L²)", variables: "φ₁ present, φ₂ target angle; C per phase of a delta bank" },
+  { id: "tx-eff", name: "Transformer Efficiency", category: "Power & Machines", expression: "η = x S cos φ / (x S cos φ + P_i + x² P_cu)", variables: "x load fraction; maximum when x = √(P_i / P_cu)" },
+  { id: "rotor-freq", name: "Rotor Frequency", category: "Power & Machines", expression: "f_r = s · f", variables: "s slip, f supply frequency" },
   { id: "energy", name: "Electrical Energy", category: "Power & Machines", expression: "E = P · t  (kWh = kW × h)", variables: "1 kWh = 3.6 MJ" },
 
   // Digital & Signals
   { id: "555-astable", name: "555 Astable Frequency", category: "Digital & Signals", expression: "f = 1.44 / ((R₁ + 2R₂) · C)", variables: "Duty = (R₁ + R₂) / (R₁ + 2R₂)" },
   { id: "555-mono", name: "555 Monostable Pulse Width", category: "Digital & Signals", expression: "t = 1.1 · R · C", variables: "Triggered by falling edge on pin 2" },
+  { id: "twos", name: "Two's Complement", category: "Digital & Signals", expression: "−x = (NOT x) + 1,  range −2ⁿ⁻¹ … 2ⁿ⁻¹ − 1", variables: "n number of bits (8-bit: −128 … 127)" },
+  { id: "demorgan", name: "De Morgan's Theorems", category: "Digital & Signals", expression: "(A · B)′ = A′ + B′,  (A + B)′ = A′ · B′", variables: "Basis of NAND/NOR universality" },
+  { id: "555-astable-times", name: "555 High / Low Time", category: "Digital & Signals", expression: "t_H = 0.693 (R₁ + R₂) C,  t_L = 0.693 R₂ C", variables: "Duty = t_H / (t_H + t_L)" },
+  { id: "cap-code", name: "Capacitor Code", category: "Digital & Signals", expression: "C = (d₁d₂) × 10ⁿ pF  (104 = 100 nF)", variables: "Third digit n: 8 → ×0.01, 9 → ×0.1" },
   { id: "nyquist", name: "Nyquist Sampling", category: "Digital & Signals", expression: "f_s ≥ 2 · f_max", variables: "f_s sampling frequency" },
   { id: "adc", name: "ADC Resolution", category: "Digital & Signals", expression: "LSB = V_ref / 2ⁿ,  code = ⌊V_in / LSB⌋", variables: "n number of bits (Uno: 10, ESP32: 12)" },
   { id: "pwm", name: "PWM Average Voltage", category: "Digital & Signals", expression: "V_avg = D · V_high", variables: "D duty cycle (0–1)" },

@@ -32,28 +32,28 @@
       "name": "Ohm's Law & Power",
       "short_name": "Ohm's Law",
       "description": "Solve V, I, R and P from any two values",
-      "url": "/calculators/ohms-law?source=shortcut",
+      "url": "/calculators/ohms-law/?source=shortcut",
       "icons": [{ "src": "/icons/shortcut-ohm.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "Resistor & SMD Decoder",
       "short_name": "Resistor",
       "description": "Decode colour bands and SMD resistor codes",
-      "url": "/tools/resistor-decoder?source=shortcut",
+      "url": "/tools/resistor-decoder/?source=shortcut",
       "icons": [{ "src": "/icons/shortcut-resistor.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "IC & MCU Pinouts",
       "short_name": "Pinouts",
       "description": "NE555, LM741, Arduino Uno and ESP32 pinouts",
-      "url": "/tools/pinouts?source=shortcut",
+      "url": "/tools/pinouts/?source=shortcut",
       "icons": [{ "src": "/icons/shortcut-pinout.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
       "name": "V-I Lab Plotter",
       "short_name": "V-I Plotter",
       "description": "Log readings and plot V-I characteristics",
-      "url": "/tools/lab-plotter?source=shortcut",
+      "url": "/tools/lab-plotter/?source=shortcut",
       "icons": [{ "src": "/icons/shortcut-plotter.png", "sizes": "96x96", "type": "image/png" }]
     }
   ],
