@@ -82,4 +82,26 @@ Requirements: Android Studio with Android SDK 36 and JDK 21. Launcher icons (ada
 are already generated in `android/app/src/main/res`. The hardware back button navigates back through the app and
 exits at the dashboard; status-bar icons follow the light/dark theme; content respects edge-to-edge safe areas.
 
+### Automatic APK builds (GitHub Actions)
+
+`.github/workflows/build-apk.yml` runs on every push to `main` (and on pull requests to `main`, or manually from the
+**Actions** tab → *Build Android APK* → *Run workflow*). It builds the static export, runs `cap sync`, compiles the APKs
+with Gradle (JDK 21, Android SDK) and uploads them as artifacts:
+
+- `…-debug` — `eee-smart-lab-v<version>-build<run>-debug.apk`
+- `…-release` — the release APK (plus an `.aab` for Google Play when signing secrets are configured)
+
+To download: open the workflow run → **Artifacts** → unzip → install the APK on your phone (allow *Install unknown apps*).
+`versionCode` is the workflow run number, so newer builds always have a higher version.
+
+**Release signing (optional):** add repository secrets `ANDROID_KEYSTORE_BASE64` (`base64 -w0 release.jks`),
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. Without them the release APK is signed with
+the shared debug key in `android/app/debug.keystore` (public, standard `android` passwords) — fine for installing and
+testing, but Google Play will not accept it. Debug APKs always use that key too, so every new build installs over the
+previous one. (Switching an installed app to a different signing key requires uninstalling it first.) Create a key once with:
+
+```bash
+keytool -genkeypair -v -keystore release.jks -alias eee-smart-lab -keyalg RSA -keysize 2048 -validity 10000
+```
+
 > Pinout and rating data are typical datasheet values. Always verify against the manufacturer's datasheet for your exact part.

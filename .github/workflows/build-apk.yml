@@ -1,0 +1,199 @@
+name: Build Android APK
+
+# Builds the Next.js static export, syncs it into the Capacitor Android project and
+# compiles debug + release APKs, which are uploaded as downloadable workflow artifacts.
+#
+# Release signing (optional): add these repository secrets to sign the release APK/AAB
+# with your own upload key (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of your .jks/.keystore file (`base64 -w0 release.jks`)
+#   ANDROID_KEYSTORE_PASSWORD keystore password
+#   ANDROID_KEY_ALIAS         key alias
+#   ANDROID_KEY_PASSWORD      key password
+# Without them, the release APK is signed with the repo's shared debug key
+# (android/app/debug.keystore): it installs and updates fine for testing, but Google Play
+# will not accept it.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  # Also build pull requests targeting main, so changes are verified before they are merged.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js static export
+        run: npm run build
+
+      - name: Sync web assets into the Android project
+        run: npx cap sync android
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compute version
+        id: version
+        run: |
+          VERSION_NAME=$(node -p "require('./package.json').version")
+          {
+            echo "name=${VERSION_NAME}"
+            echo "code=${{ github.run_number }}"
+            echo "short_sha=${GITHUB_SHA::7}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build debug APK
+        working-directory: android
+        run: >
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          -PversionCode=${{ steps.version.outputs.code }}
+          -PversionName=${{ steps.version.outputs.name }}
+
+      - name: Prepare release signing
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+            echo "kind=release" >> "$GITHUB_OUTPUT"
+            echo "Release build will be signed with the upload key from repository secrets."
+          else
+            # No secrets: sign with the shared debug key so the release APK is still installable for testing.
+            cp android/app/debug.keystore "$RUNNER_TEMP/release.keystore"
+            echo "kind=debug-signed" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Release APK signed with the debug key::Add the ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets to produce a Play-Store-ready release build."
+          fi
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          SIGNING_KIND: ${{ steps.signing.outputs.kind }}
+          SECRET_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SECRET_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SECRET_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$SIGNING_KIND" = "release" ]; then
+            STORE_PASSWORD="$SECRET_STORE_PASSWORD"; KEY_ALIAS="$SECRET_KEY_ALIAS"; KEY_PASSWORD="$SECRET_KEY_PASSWORD"
+            # A Play Store bundle is only useful when signed with a real upload key.
+            TASKS=(assembleRelease bundleRelease)
+          else
+            STORE_PASSWORD=android; KEY_ALIAS=androiddebugkey; KEY_PASSWORD=android
+            TASKS=(assembleRelease)
+          fi
+          ./gradlew "${TASKS[@]}" --no-daemon --stacktrace \
+            -PversionCode=${{ steps.version.outputs.code }} \
+            -PversionName=${{ steps.version.outputs.name }} \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.keystore" \
+            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+
+      - name: Collect and verify outputs
+        id: outputs
+        run: |
+          set -euo pipefail
+          OUT=dist
+          mkdir -p "$OUT"
+          BASE="eee-smart-lab-v${{ steps.version.outputs.name }}-build${{ steps.version.outputs.code }}"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$OUT/${BASE}-debug.apk"
+          RELEASE_APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          cp "$RELEASE_APK" "$OUT/${BASE}-release-${{ steps.signing.outputs.kind }}.apk"
+          if ls android/app/build/outputs/bundle/release/*.aab >/dev/null 2>&1; then
+            cp android/app/build/outputs/bundle/release/*.aab "$OUT/${BASE}-release.aab"
+          fi
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -type f | sort -V | tail -n 1)
+          echo "Using $APKSIGNER"
+          for apk in "$OUT"/*.apk; do
+            echo "::group::Verify $(basename "$apk")"
+            "$APKSIGNER" verify --verbose "$apk"
+            echo "::endgroup::"
+          done
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          ls -lh "$OUT"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.outputs.outputs.base }}-debug
+          path: dist/*-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.outputs.outputs.base }}-release
+          path: |
+            dist/*-release-*.apk
+            dist/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Write job summary
+        run: |
+          {
+            echo "## EEE Smart Lab — Android build ${{ steps.version.outputs.code }}"
+            echo ""
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Version | ${{ steps.version.outputs.name }} (versionCode ${{ steps.version.outputs.code }}) |"
+            echo "| Commit | \`${{ steps.version.outputs.short_sha }}\` |"
+            echo "| Release signing | ${{ steps.signing.outputs.kind }} |"
+            echo ""
+            echo "### Files"
+            echo ""
+            for f in dist/*; do echo "- \`$(basename "$f")\` — $(du -h "$f" | cut -f1)"; done
+            echo ""
+            echo "Download them from the **Artifacts** section of this run. Unzip and install the APK on your phone"
+            echo "(allow *Install unknown apps* for your browser / file manager)."
+          } >> "$GITHUB_STEP_SUMMARY"

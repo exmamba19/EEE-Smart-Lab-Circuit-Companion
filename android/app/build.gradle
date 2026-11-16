@@ -7,8 +7,10 @@ android {
         applicationId "com.prachurzo.eeesmartlab"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // CI passes -PversionCode=<run number> -PversionName=<package.json version> so every build can be
+        // installed over the previous one; local builds fall back to 1 / "1.0".
+        versionCode((project.findProperty("versionCode") ?: "1").toString().toInteger())
+        versionName((project.findProperty("versionName") ?: "1.0").toString())
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,7 +18,20 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        // Shared, non-secret debug key (standard "android" passwords) committed to the repo so that debug
+        // APKs from every machine and every CI run share one signature and can update each other in place.
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
